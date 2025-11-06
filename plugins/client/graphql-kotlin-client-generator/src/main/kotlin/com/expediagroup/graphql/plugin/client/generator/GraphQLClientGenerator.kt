@@ -53,6 +53,8 @@ class GraphQLClientGenerator(
     private val documentParser: Parser = Parser()
     private val typeAliases: MutableMap<String, TypeAliasSpec> = mutableMapOf()
     private val sharedTypes: MutableMap<ClassName, List<TypeSpec>> = mutableMapOf()
+    private val sharedClassNameCache: MutableMap<String, MutableList<ClassName>> = mutableMapOf()
+    private val sharedTypeToSelectionSetMap: MutableMap<String, Set<String>> = mutableMapOf()
     private var generateOptionalSerializer: Boolean = false
     private val graphQLSchema: TypeDefinitionRegistry
     private val parserOptions: ParserOptions = ParserOptions.newParserOptions().also { this.config.parserOptions(it) }.build()
@@ -119,7 +121,9 @@ class GraphQLClientGenerator(
                 allowDeprecated = config.allowDeprecated,
                 customScalarMap = config.customScalarMap,
                 serializer = config.serializer,
-                useOptionalInputWrapper = config.useOptionalInputWrapper
+                useOptionalInputWrapper = config.useOptionalInputWrapper,
+                sharedClassNameCache = sharedClassNameCache,
+                sharedTypeToSelectionSetMap = sharedTypeToSelectionSetMap
             )
             val queryConstName = capitalizedOperationName.toUpperUnderscore()
             val queryConstProp = PropertySpec.builder(queryConstName, STRING)
@@ -216,6 +220,7 @@ class GraphQLClientGenerator(
             // shared types
             sharedTypes.putAll(context.enumClassToTypeSpecs.mapValues { listOf(it.value) })
             sharedTypes.putAll(context.inputClassToTypeSpecs.mapValues { listOf(it.value) })
+            sharedTypes.putAll(context.objectClassToTypeSpecs.mapValues { listOf(it.value) })
             context.scalarClassToConverterTypeSpecs
                 .values
                 .forEach {

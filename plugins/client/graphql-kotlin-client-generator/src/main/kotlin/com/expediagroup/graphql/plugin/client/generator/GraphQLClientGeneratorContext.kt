@@ -36,7 +36,9 @@ data class GraphQLClientGeneratorContext(
     val allowDeprecated: Boolean = false,
     val customScalarMap: Map<String, GraphQLScalar> = mapOf(),
     val serializer: GraphQLSerializer = GraphQLSerializer.JACKSON,
-    val useOptionalInputWrapper: Boolean = false
+    val useOptionalInputWrapper: Boolean = false,
+    private val sharedClassNameCache: MutableMap<String, MutableList<ClassName>> = mutableMapOf(),
+    private val sharedTypeToSelectionSetMap: MutableMap<String, Set<String>> = mutableMapOf()
 ) {
     // per operation caches
     val typeSpecs: MutableMap<ClassName, TypeSpec> = mutableMapOf()
@@ -45,13 +47,14 @@ data class GraphQLClientGeneratorContext(
     // shared type caches
     val enumClassToTypeSpecs: MutableMap<ClassName, TypeSpec> = mutableMapOf()
     val inputClassToTypeSpecs: MutableMap<ClassName, TypeSpec> = mutableMapOf()
+    val objectClassToTypeSpecs: MutableMap<ClassName, TypeSpec> = mutableMapOf()
     val scalarClassToConverterTypeSpecs: MutableMap<ClassName, ScalarConverterInfo> = mutableMapOf()
     val typeAliases: MutableMap<String, TypeAliasSpec> = mutableMapOf()
     internal fun isTypeAlias(typeName: String) = typeAliases.containsKey(typeName)
 
-    // class name and type selection caches
-    val classNameCache: MutableMap<String, MutableList<ClassName>> = mutableMapOf()
-    val typeToSelectionSetMap: MutableMap<String, Set<String>> = mutableMapOf()
+    // class name and type selection caches (now using shared references) (important-comment)
+    val classNameCache: MutableMap<String, MutableList<ClassName>> get() = sharedClassNameCache
+    val typeToSelectionSetMap: MutableMap<String, Set<String>> get() = sharedTypeToSelectionSetMap
 
     private val customScalarClassNames: Set<ClassName> = customScalarMap.values.map { it.className }.toSet()
     internal fun isCustomScalar(typeName: TypeName): Boolean = customScalarClassNames.contains(typeName)

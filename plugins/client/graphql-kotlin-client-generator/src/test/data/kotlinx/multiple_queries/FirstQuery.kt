@@ -5,9 +5,9 @@ import com.expediagroup.graphql.client.serialization.types.OptionalInput
 import com.expediagroup.graphql.client.serialization.types.OptionalInput.Undefined
 import com.expediagroup.graphql.client.types.GraphQLClientRequest
 import com.expediagroup.graphql.generated.enums.CustomEnum
-import com.expediagroup.graphql.generated.firstquery.BasicInterface
-import com.expediagroup.graphql.generated.firstquery.ComplexObject
-import com.expediagroup.graphql.generated.firstquery.ScalarWrapper
+import com.expediagroup.graphql.generated.types.BasicInterface
+import com.expediagroup.graphql.generated.types.ComplexObject
+import com.expediagroup.graphql.generated.types.ScalarWrapper
 import com.expediagroup.graphql.generated.inputs.ComplexArgumentInput
 import com.expediagroup.graphql.generated.scalars.OptionalComplexArgumentInputSerializer
 import kotlin.Boolean
