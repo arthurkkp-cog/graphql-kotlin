@@ -5,11 +5,11 @@ import com.expediagroup.graphql.client.serialization.types.OptionalInput
 import com.expediagroup.graphql.client.serialization.types.OptionalInput.Undefined
 import com.expediagroup.graphql.client.types.GraphQLClientRequest
 import com.expediagroup.graphql.generated.enums.CustomEnum
-import com.expediagroup.graphql.generated.types.BasicInterface
-import com.expediagroup.graphql.generated.types.ComplexObject
-import com.expediagroup.graphql.generated.types.ScalarWrapper
 import com.expediagroup.graphql.generated.inputs.ComplexArgumentInput
 import com.expediagroup.graphql.generated.scalars.OptionalComplexArgumentInputSerializer
+import com.expediagroup.graphql.generated.types.BasicInterface
+import com.expediagroup.graphql.generated.types.ComplexObject2
+import com.expediagroup.graphql.generated.types.ScalarWrapper
 import kotlin.Boolean
 import kotlin.String
 import kotlin.reflect.KClass
@@ -49,11 +49,11 @@ public class FirstQuery(
     /**
      * Query returning an object that references another object
      */
-    public val complexObjectQuery: ComplexObject,
+    public val complexObjectQuery: ComplexObject2,
     /**
      * Query that returns enum value
      */
-    public val enumQuery: CustomEnum = CustomEnum.__UNKNOWN_VALUE,
+    public val enumQuery: CustomEnum,
     /**
      * Query returning an interface
      */
