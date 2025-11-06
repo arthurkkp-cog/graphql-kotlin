@@ -111,8 +111,10 @@ internal fun generateCustomClassName(context: GraphQLClientGeneratorContext, gra
             // generate corresponding type spec
             when (graphQLTypeDefinition) {
                 is ObjectTypeDefinition -> {
-                    className = generateClassName(context, graphQLTypeDefinition, selectionSet)
-                    context.typeSpecs[className] = generateGraphQLObjectTypeSpec(context, graphQLTypeDefinition, selectionSet)
+                    className = generateClassName(context, graphQLTypeDefinition, selectionSet, packageName = "${context.packageName}.types")
+                    val typeSpec = generateGraphQLObjectTypeSpec(context, graphQLTypeDefinition, selectionSet)
+                    context.objectClassToTypeSpecs[className] = typeSpec
+                    context.typeSpecs[className] = typeSpec
                 }
                 is InputObjectTypeDefinition -> {
                     className = generateClassName(context, graphQLTypeDefinition, selectionSet, packageName = "${context.packageName}.inputs")
@@ -123,14 +125,18 @@ internal fun generateCustomClassName(context: GraphQLClientGeneratorContext, gra
                     context.enumClassToTypeSpecs[className] = generateGraphQLEnumTypeSpec(context, graphQLTypeDefinition)
                 }
                 is InterfaceTypeDefinition -> {
-                    className = generateClassName(context, graphQLTypeDefinition, selectionSet)
+                    className = generateClassName(context, graphQLTypeDefinition, selectionSet, packageName = "${context.packageName}.types")
                     context.polymorphicTypes[className] = mutableListOf(className)
-                    context.typeSpecs[className] = generateGraphQLInterfaceTypeSpec(context, graphQLTypeDefinition, selectionSet)
+                    val typeSpec = generateGraphQLInterfaceTypeSpec(context, graphQLTypeDefinition, selectionSet)
+                    context.objectClassToTypeSpecs[className] = typeSpec
+                    context.typeSpecs[className] = typeSpec
                 }
                 is UnionTypeDefinition -> {
-                    className = generateClassName(context, graphQLTypeDefinition, selectionSet)
+                    className = generateClassName(context, graphQLTypeDefinition, selectionSet, packageName = "${context.packageName}.types")
                     context.polymorphicTypes[className] = mutableListOf(className)
-                    context.typeSpecs[className] = generateGraphQLUnionTypeSpec(context, graphQLTypeDefinition, selectionSet)
+                    val typeSpec = generateGraphQLUnionTypeSpec(context, graphQLTypeDefinition, selectionSet)
+                    context.objectClassToTypeSpecs[className] = typeSpec
+                    context.typeSpecs[className] = typeSpec
                 }
                 is ScalarTypeDefinition -> {
                     // its not possible to enter this clause if converter is not available
@@ -158,7 +164,7 @@ internal fun generateCustomClassName(context: GraphQLClientGeneratorContext, gra
 
         // if different selection set we need to generate custom type
         val overriddenName = "$graphQLTypeName${cachedTypeNames.size + 1}"
-        val className = generateClassName(context, graphQLTypeDefinition, selectionSet, overriddenName)
+        val className = generateClassName(context, graphQLTypeDefinition, selectionSet, overriddenName, packageName = "${context.packageName}.types")
 
         // generate new type spec
         val typeSpec = when (graphQLTypeDefinition) {
@@ -174,6 +180,7 @@ internal fun generateCustomClassName(context: GraphQLClientGeneratorContext, gra
             // should never happen as we can only generate different object, interface or union type
             else -> throw UnknownGraphQLTypeException(graphQLType)
         }
+        context.objectClassToTypeSpecs[className] = typeSpec
         context.typeSpecs[className] = typeSpec
         className
     }
@@ -187,7 +194,7 @@ internal fun generateClassName(
     graphQLType: NamedNode<*>,
     selectionSet: SelectionSet? = null,
     nameOverride: String? = null,
-    packageName: String = "${context.packageName}.${context.operationName.lowercase()}"
+    packageName: String = "${context.packageName}.types"
 ): ClassName {
     val typeName = nameOverride ?: graphQLType.name
     val className = ClassName(packageName, typeName)

@@ -7,9 +7,9 @@ import com.expediagroup.graphql.client.types.GraphQLClientRequest
 import com.expediagroup.graphql.generated.enums.CustomEnum
 import com.expediagroup.graphql.generated.inputs.ComplexArgumentInput
 import com.expediagroup.graphql.generated.scalars.OptionalComplexArgumentInputSerializer
-import com.expediagroup.graphql.generated.secondquery.BasicInterface
-import com.expediagroup.graphql.generated.secondquery.ComplexObject
-import com.expediagroup.graphql.generated.secondquery.ScalarWrapper
+import com.expediagroup.graphql.generated.types.BasicInterface
+import com.expediagroup.graphql.generated.types.ComplexObject
+import com.expediagroup.graphql.generated.types.ScalarWrapper
 import kotlin.Boolean
 import kotlin.String
 import kotlin.reflect.KClass

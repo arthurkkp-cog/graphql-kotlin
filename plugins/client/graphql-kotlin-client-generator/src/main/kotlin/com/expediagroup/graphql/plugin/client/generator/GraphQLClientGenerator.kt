@@ -53,6 +53,8 @@ class GraphQLClientGenerator(
     private val documentParser: Parser = Parser()
     private val typeAliases: MutableMap<String, TypeAliasSpec> = mutableMapOf()
     private val sharedTypes: MutableMap<ClassName, List<TypeSpec>> = mutableMapOf()
+    private val sharedClassNameCache: MutableMap<String, MutableList<ClassName>> = mutableMapOf()
+    private val sharedTypeToSelectionSetMap: MutableMap<String, Set<String>> = mutableMapOf()
     private var generateOptionalSerializer: Boolean = false
     private val graphQLSchema: TypeDefinitionRegistry
     private val parserOptions: ParserOptions = ParserOptions.newParserOptions().also { this.config.parserOptions(it) }.build()
@@ -119,7 +121,9 @@ class GraphQLClientGenerator(
                 allowDeprecated = config.allowDeprecated,
                 customScalarMap = config.customScalarMap,
                 serializer = config.serializer,
-                useOptionalInputWrapper = config.useOptionalInputWrapper
+                useOptionalInputWrapper = config.useOptionalInputWrapper,
+                sharedClassNameCache = sharedClassNameCache,
+                sharedTypeToSelectionSetMap = sharedTypeToSelectionSetMap
             )
             val queryConstName = capitalizedOperationName.toUpperUnderscore()
             val queryConstProp = PropertySpec.builder(queryConstName, STRING)
@@ -190,6 +194,16 @@ class GraphQLClientGenerator(
             for ((superClassName, implementations) in context.polymorphicTypes) {
                 polymorphicTypes.add(superClassName)
                 val polymorphicTypeSpec = FileSpec.builder(superClassName.packageName, superClassName.simpleName)
+                
+                // Add the union/interface TypeSpec first
+                context.typeSpecs[superClassName]?.let { typeSpec ->
+                    if (typeSpec.name != null) {
+                        polymorphicTypeSpec.addType(typeSpec)
+                        typeSpecByPackageName.add("${superClassName.packageName}.${typeSpec.name}")
+                    }
+                }
+                
+                // Then add all implementations
                 for (implementation in implementations) {
                     polymorphicTypes.add(implementation)
                     context.typeSpecs[implementation]?.let { typeSpec ->
@@ -204,7 +218,7 @@ class GraphQLClientGenerator(
                 }
                 fileSpecs.add(polymorphicTypeSpec.build())
             }
-            context.typeSpecs.minus(polymorphicTypes).forEach { (className, typeSpec) ->
+            context.typeSpecs.minus(polymorphicTypes).minus(context.objectClassToTypeSpecs.keys).forEach { (className, typeSpec) ->
                 val outputTypeFileSpec = FileSpec.builder(className.packageName, className.simpleName)
                     .addType(typeSpec)
                     .build()
@@ -216,6 +230,9 @@ class GraphQLClientGenerator(
             // shared types
             sharedTypes.putAll(context.enumClassToTypeSpecs.mapValues { listOf(it.value) })
             sharedTypes.putAll(context.inputClassToTypeSpecs.mapValues { listOf(it.value) })
+            // exclude polymorphic types (unions/interfaces and their implementations) as they're generated separately
+            val polymorphicTypeClassNames = context.polymorphicTypes.keys + context.polymorphicTypes.values.flatten()
+            sharedTypes.putAll(context.objectClassToTypeSpecs.filterKeys { !polymorphicTypeClassNames.contains(it) }.mapValues { listOf(it.value) })
             context.scalarClassToConverterTypeSpecs
                 .values
                 .forEach {
